@@ -15,8 +15,12 @@ export default function TodoApp() {
   }, []);
 
   const fetchTodos = async () => {
-    const res = await axios.get(API_URL);
-    setTodos(res.data);
+    try {
+      const res = await axios.get(API_URL);
+      setTodos(res.data);
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   const handleFileUpload = (e) => {
@@ -33,31 +37,30 @@ export default function TodoApp() {
 
   const addTask = async (e) => {
     e.preventDefault();
-    if (!taskText.trim()) return;
     const res = await axios.post(API_URL, { text: taskText, completed: false, images: taskImages });
     setTodos([...todos, res.data]);
     setTaskText("");
     setTaskImages([]);
   };
 
-  const toggleTaskStatus = async (id) => {
+  const checkboxStatus = async (id) => {
     const task = todos.find((t) => t.id === id);
     if (!task) return;
     const res = await axios.put(`${API_URL}/${id}`, { ...task, completed: !task.completed });
     setTodos(todos.map((t) => (t.id === id ? res.data : t)));
   };
 
-  const removeTask = async (id) => {
+  const deleteTask = async (id) => {
     await axios.delete(`${API_URL}/${id}`);
     setTodos(todos.filter((t) => t.id !== id));
   };
 
-  const startEditingTask = (id, text) => {
+  const editTask = (id, text) => {
     setEditingTaskId(id);
     setEditTaskText(text);
   };
 
-  const saveEditedTask = async (id) => {
+  const saveTask = async (id) => {
 
     const task = todos.find((t) => t.id === id);
     const updatedTask = {
@@ -71,7 +74,7 @@ export default function TodoApp() {
       setEditingTaskId(null);
       setTaskImages([]);
     } catch (error) {
-      console.error("Edit error:", error);
+      console.error(error);
     }
   };
 
@@ -120,13 +123,13 @@ export default function TodoApp() {
                 )}
               </div>
               <div className="flex items-center space-x-2">
-                <input type="checkbox" checked={task.completed} onChange={() => toggleTaskStatus(task.id)} className="w-5 h-5 accent-blue-500 cursor-pointer" />
+                <input type="checkbox" checked={task.completed} onChange={() => checkboxStatus(task.id)} className="w-5 h-5 accent-blue-500 cursor-pointer" />
                 {editingTaskId === task.id ? (
-                  <button onClick={() => saveEditedTask(task.id)} className="bg-green-500 text-white px-3 py-1 rounded-lg hover:bg-green-600 transition">Save</button>
+                  <button onClick={() => saveTask(task.id)} className="bg-green-500 text-white px-3 py-1 rounded-lg hover:bg-green-600 transition">Save</button>
                 ) : (
                   <>
-                    <button onClick={() => startEditingTask(task.id, task.text)} className="bg-yellow-500 text-white px-3 py-1 rounded-lg hover:bg-yellow-600 transition">Edit</button>
-                    <button onClick={() => removeTask(task.id)} className="bg-red-500 text-white px-3 py-1 rounded-lg hover:bg-red-600 transition">Delete</button>
+                    <button onClick={() => editTask(task.id, task.text)} className="bg-yellow-500 text-white px-3 py-1 rounded-lg hover:bg-yellow-600 transition">Edit</button>
+                    <button onClick={() => deleteTask(task.id)} className="bg-red-500 text-white px-3 py-1 rounded-lg hover:bg-red-600 transition">Delete</button>
                   </>
                 )}
               </div>
